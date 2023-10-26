@@ -32,8 +32,7 @@ public class RunGame{
             char[][] s1Copy = Arrays.copyOf(s1Guesses, s1Guesses.length);
 
             String guess1 = Admiral.fire(s1Copy);
-            history[moves -1] = guess1;
-            //System.out.println(guess1);
+            history[moves - 1] = guess1;
             boolean p1 = BattleShipTools.updateGuess(s1Guesses,guess1,gameBoard);
             //break if the player won
             if(p1){
