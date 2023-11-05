@@ -12,7 +12,6 @@ public class Admiral {
     private static int[] ships = new int[]{2, 3, 3, 4, 5};
 
 
-
     public static void main(String[] args) {
         //this is our board where we store hits
         //store misses as 'false' values
@@ -34,6 +33,66 @@ public class Admiral {
         System.out.println(Arrays.toString(targetLock(contacts)));
         System.out.println("Boardsum = " + boardSum(contacts));
     }
+
+    public static String fire(char[][] board) {
+        /*
+            ‘.’ – no guess yet
+            ‘O’ – miss
+            ‘X’ – hit
+            ‘1’ – Patrol Boat, has length 2, and has been sunk
+            ‘2’ – Submarine, has length 3, and has been sunk
+            ‘3’ – Destroyer, has length 3, and has been sunk
+            ‘4’ – Battleship, has length 4, and has been sunk
+            ‘5’ – Aircraft carrier, has length 5, and has been sunk
+         */
+
+        boolean containsWoundedShip = false;
+        boolean[] deadShips = new boolean[5];
+
+        for (char[] row : board) {
+            for (char cell : row) {
+                if (cell == 'X') {
+                    containsWoundedShip = true;
+                    break;
+                } else if (Character.isDigit(cell)) {
+                    deadShips[cell - 1] = true;
+                }
+            }
+        }
+
+
+        int[] shot;
+
+        if (containsWoundedShip) {
+            shot = kill(board, deadShips);
+        } else {
+            shot = hunt(board, deadShips);
+        }
+
+        return formatGuess(shot[0], shot[1]);
+    }
+
+    //if not wounded ships, search for one
+    public static int[] hunt(char[][] board, boolean[] deadShips) {
+        return new int[]{0, 0};
+    }
+
+    //try and finish off a wounded ship
+    public static int[] kill(char[][] board, boolean[] deadShips) {
+        return new int[]{0, 0};
+    }
+
+
+    //change indices into proper guess format
+    public static String formatGuess(int row, int col) {
+        String guess = "";
+        guess += (char) ('A' + row - 1);
+        guess += String.valueOf(col);
+        return guess;
+    }
+
+
+
 
     public static void printBoard(int[][] board) {
         for (int[] row : board) {
@@ -113,17 +172,6 @@ public class Admiral {
         return coords;
     }
 
-    public static String fire(char[][] s1Copy) {
-        int[] coords = targetLock(contacts);
-        String shot = "";
-        if (s1Copy[coords[0]][coords[1]] == '.') {
-            char row = (char) (coords[0] + 73);
-            char col = (char) coords[1];
-            shot = row + "" + col;
-        }
-
-        return shot;
-    }
 
     public static double odds(int length, int value) {
 
