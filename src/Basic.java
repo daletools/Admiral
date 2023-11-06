@@ -1,7 +1,6 @@
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.stream.Stream;
 
 public class Basic {
     public static String fire(char[][] board) {
@@ -17,20 +16,20 @@ public class Basic {
          */
 
         boolean containsWoundedShip = false;
-        HashMap deadShips = new HashMap<Character, Integer>();
-        deadShips.put('1', 2);
-        deadShips.put('2', 3);
-        deadShips.put('3', 3);
-        deadShips.put('4', 4);
-        deadShips.put('5', 5);
+        HashMap<Character, Integer> liveShips = new HashMap<>();
+        liveShips.put('1', 2);
+        liveShips.put('2', 3);
+        liveShips.put('3', 3);
+        liveShips.put('4', 4);
+        liveShips.put('5', 5);
 
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[row].length; col++) {
-                if (board[row][col] == 'X') {
+        for (char[] row : board) {
+            for (char cell : row) {
+                if (cell == 'X') {
                     containsWoundedShip = true;
                     break;
-                } else if (Character.isDigit(board[row][col])) {
-                    deadShips.remove(board[row][col]);
+                } else if (Character.isDigit(cell)) {
+                    liveShips.remove(cell);
                 }
             }
         }
@@ -40,15 +39,12 @@ public class Basic {
         if (containsWoundedShip) {
             shot = kill(board);
         } else {
-            shot = randomShot(board, deadShips);
+            shot = radar(board, liveShips);
         }
 
         return formatGuess(shot[0], shot[1]);
     }
 
-    public static int[] hunt(char[][] board, boolean[] deadShips) {
-        return new int[]{0, 0};
-    }
 
     //try and finish off a wounded ship
     public static int[] kill(char[][] board) {
@@ -97,7 +93,7 @@ public class Basic {
         return coords;
     }
 
-    public static int[] randomShot(char[][] board, HashMap deadShips) {
+    public static int[] hunt(char[][] board, HashMap<Character, Integer> deadShips) {
         int[] coords = {0, 0};
 
         int smallestShip = (int) Collections.min(deadShips.values());
@@ -129,6 +125,67 @@ public class Basic {
 
             }
 
+        }
+
+        return coords;
+    }
+
+    public static int[] radar(char[][] board, HashMap<Character, Integer> ships) {
+        int[][] probabilityBoard = new int[10][10];
+
+        for (int ship : ships.values()) {
+
+            for (int row = 0; row < board.length; row++) {
+                String fullRow = Arrays.toString(board[row]).replaceAll("[, \\[\\]]", "");
+                for (int col = 0; col < board[row].length - ship; col++) {
+                    String space = fullRow.substring(col, col + ship);
+                    if (space.matches("^\\.*$")) {
+                        for (int i = 0; i <= ship; i++) {
+                            if (board[row][col + i] == '.') {
+                                probabilityBoard[row][col + i]++;
+                            } else {
+                                System.out.print("error here");
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int col = 0; col < board.length; col++) {
+                String fullCol = "";
+                for (int row = 0; row < board.length; row++) {
+                    fullCol += board[row][col];
+                }
+                for (int row = 0; row < board.length - ship; row++) {
+                    String space = fullCol.substring(row, row + ship);
+                    if (space.matches("^\\.*$")) {
+                        for (int i = 0; i <= ship; i++) {
+                            if (board[row + i][col] == '.') {
+                                probabilityBoard[row + i][col]++;
+                            } else {
+                                System.out.print("error here");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        int[] coords = {0, 0};
+        int max = 0;
+
+        for (int row = 0; row < probabilityBoard.length; row++) {
+            for (int col = 0; col < probabilityBoard[row].length; col++) {
+                if (probabilityBoard[row][col] > max) {
+                    max = probabilityBoard[row][col];
+                    coords[0] = row;
+                    coords[1] = col;
+                }
+            }
+        }
+
+        if (board[coords[0]][coords[1]] != '.') {
+            System.out.print("holup");
         }
 
         return coords;
