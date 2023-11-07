@@ -137,14 +137,15 @@ public class Basic {
 
             for (int row = 0; row < board.length; row++) {
                 String fullRow = Arrays.toString(board[row]).replaceAll("[, \\[\\]]", "");
-                for (int col = 0; col < board[row].length - ship; col++) {
+                for (int col = 0; col < board[row].length - ship + 1; col++) {
                     String space = fullRow.substring(col, col + ship);
                     if (space.matches("^\\.*$")) {
-                        for (int i = 0; i <= ship; i++) {
+
+                        for (int i = 0; i < ship; i++) {
                             if (board[row][col + i] == '.') {
                                 probabilityBoard[row][col + i]++;
                             } else {
-                                System.out.print("error here");
+                                System.out.println("horizontal error here");
                             }
                         }
                     }
@@ -156,14 +157,14 @@ public class Basic {
                 for (int row = 0; row < board.length; row++) {
                     fullCol += board[row][col];
                 }
-                for (int row = 0; row < board.length - ship; row++) {
+                for (int row = 0; row < board.length - ship + 1; row++) {
                     String space = fullCol.substring(row, row + ship);
                     if (space.matches("^\\.*$")) {
-                        for (int i = 0; i <= ship; i++) {
+                        for (int i = 0; i < ship; i++) {
                             if (board[row + i][col] == '.') {
                                 probabilityBoard[row + i][col]++;
                             } else {
-                                System.out.print("error here");
+                                System.out.println("vertical error here");
                             }
                         }
                     }
@@ -172,6 +173,7 @@ public class Basic {
         }
 
         int[] coords = {0, 0};
+
         int max = 0;
 
         for (int row = 0; row < probabilityBoard.length; row++) {
@@ -185,7 +187,7 @@ public class Basic {
         }
 
         if (board[coords[0]][coords[1]] != '.') {
-            System.out.print("holup");
+            return hunt(board, ships);
         }
 
         return coords;
