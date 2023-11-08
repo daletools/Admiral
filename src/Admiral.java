@@ -43,6 +43,7 @@ public class Admiral {
         fleet.put('4', 4);
         fleet.put('5', 5);
 
+
         //Remove any sunk ships fromm the fleet
         for (char[] row : board) {
             for (char cell : row) {
@@ -85,6 +86,79 @@ public class Admiral {
             }
         }
 
+        String up = "";
+        String down = "";
+        String left = "";
+        String right = "";
+
+
+        //which cardinal directions goes the longest before terminating at a wall or other revealed square?
+        for (int[] wound : wounds) {
+            if (wound[0] == 0 && wound[1] == 0) {
+                continue;
+            }
+
+            if (((wound[0] > 0 && board[wound[0] - 1][wound[1]] != '.') || wound[0] == 0) &&
+                    ((wound[0] < board.length - 1 && board[wound[0] + 1][wound[1]] != '.') || wound[0] == board.length - 1) &&
+                    ((wound[1] > 0 && board[wound[0]][wound[1] - 1] != '.') || wound[1] == 0) &&
+                    (((wound[1] < board.length - 1 && board[wound[0]][wound[1] + 1] != '.')) || wound[1] == board.length - 1)) {
+                continue;
+            }
+
+            if (wound[0] > 0) {
+                for (int row = wound[0]; row >= 0; row--) {
+                    if (board[row][wound[1]] == '.' || up.isEmpty()) {
+                        up += board[row][wound[1]];
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (wound[1] < board.length - 1) {
+                for (int col = wound[1]; col < board.length; col++) {
+                    if (board[wound[0]][col] == '.' || right.isEmpty()) {
+                        right += board[wound[0]][col];
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (wound[1] > 0) {
+                for (int col = wound[1]; col >= 0; col--) {
+                    if (board[wound[0]][col] == '.' || left.isEmpty()) {
+                        left += board[wound[0]][col];
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+
+            if (wound[0] < board.length - 1) {
+                for (int row = wound[0]; row < board.length; row++) {
+                    if (board[row][wound[1]] == '.' || down.isEmpty()) {
+                        down += board[row][wound[1]];
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+
+            if (up.length() > right.length() && up.length() > left.length() && up.length() > down.length()) {
+                return new int[]{wound[0] - 1, wound[1]};
+            } else if (right.length() > down.length() && right.length() > left.length()) {
+                return new int[]{wound[0], wound[1] + 1};
+            } else if (down.length() > left.length()) {
+                return new int[]{wound[0] + 1, wound[1]};
+            } else {
+                return new int[]{wound[0], wound[1] - 1};
+            }
+        }
+
+
         //For each hit, shoot at any unknown squares around it.
         for (int[] wound : wounds) {
             //check above
@@ -125,7 +199,7 @@ public class Admiral {
         //For each ship, find all valid placements and increment the corresponding cells on the probability board.
         for (int ship : ships.values()) {
             for (int row = 0; row < board.length; row++) {
-                //Just join to string each row and filter out the bits we dont want
+                //Just join to string each row and filter out the bits we don't want
                 String fullRow = Arrays.toString(board[row]).replaceAll("[, \\[\\]]", "");
 
                 for (int col = 0; col < board[row].length - ship + 1; col++) {
@@ -135,11 +209,7 @@ public class Admiral {
                     if (space.matches("^\\.*$")) {
                         for (int i = 0; i < ship; i++) {
                             //increment each space the ship would cover
-                            if (board[row][col + i] == '.') {
-                                probabilityBoard[row][col + i]++;
-                            } else {
-                                System.out.println("horizontal error here");
-                            }
+                            probabilityBoard[row][col + i]++;
                         }
                     }
                 }
@@ -156,11 +226,7 @@ public class Admiral {
                     String space = fullCol.substring(row, row + ship);
                     if (space.matches("^\\.*$")) {
                         for (int i = 0; i < ship; i++) {
-                            if (board[row + i][col] == '.') {
-                                probabilityBoard[row + i][col]++;
-                            } else {
-                                System.out.println("vertical error here");
-                            }
+                            probabilityBoard[row + i][col]++;
                         }
                     }
                 }

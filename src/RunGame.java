@@ -2,13 +2,23 @@ import java.util.Arrays;
 public class RunGame{
     public static void main(String[] args){
         int sum = 0;
-        int games = 10000;
+        int games = 100000;
+        int fastest = 100;
+        int slowest = 0;
         for(int i = 0; i < games; i++){
-            sum += play();
-            System.out.println(i);
+            int gameTime = play();
+            sum += gameTime;
+            if (fastest > gameTime) {
+                fastest = gameTime;
+            } else if (slowest < gameTime) {
+                slowest = gameTime;
+            }
+            //System.out.println(i);
         }
         double avg = (double)sum/games;
         System.out.println("Avg is " + avg);
+        System.out.println("Fastest is " + fastest);
+        System.out.println("Slowest is " + slowest);
     }
 
     public static int play(){
@@ -60,6 +70,7 @@ public class RunGame{
          */
         //System.out.println();
         //  BattleShipTools.printBoard(s1Guesses);
+
         return moves;
     }
 
