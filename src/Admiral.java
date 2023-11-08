@@ -9,14 +9,12 @@ Description: Given a 10x10 board, plays battleship to the best of its ability.  
     placements that would put a ship in each cell, then targets the highest number.
 
     TODO()
-    - Refine the kill() method to target more likely cells first
     - New hunting algorithm, can we look ahead at possibilities and determine the 'delta certainty' of each shot?
     - Certainty meaning how sure we are any given space is either occupied or not.
     - Is it always best to shoot at the highest valued cell, or is it sometimes more valuable to increase our
     overall board certainty?
 
 */
-
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,13 +34,14 @@ public class Admiral {
 
         //Check for ships that have been hit but not sunk.
         boolean containsWoundedShip = false;
+
+        //Assemble fleet
         HashMap<Character, Integer> fleet = new HashMap<>();
         fleet.put('1', 2);
         fleet.put('2', 3);
         fleet.put('3', 3);
         fleet.put('4', 4);
         fleet.put('5', 5);
-
 
         //Remove any sunk ships fromm the fleet
         for (char[] row : board) {
@@ -91,44 +90,91 @@ public class Admiral {
         String left = "";
         String right = "";
 
-
         //which cardinal directions goes the longest before terminating at a wall or other revealed square?
         for (int[] wound : wounds) {
-            if (wound[0] == 0 && wound[1] == 0) {
+
+            int row = wound[0];
+            int col = wound[1];
+
+            for (int[] otherWound : wounds) {
+                int otherRow = otherWound[0];
+                int otherCol = otherWound[1];
+
+                //if wound and otherWound are the same, skip
+                if (row - otherRow == 0 && col - otherCol == 0) {
+                    continue;
+
+                //if they are within one of each other horizontally OR vertically
+                } else if (Math.abs(row - otherRow) == 1 ^ Math.abs(col - otherCol) == 1) {
+                    //On same row and adjacent
+                    if (Math.abs(row - otherRow) == 1) {
+                        if (row > otherRow && row + 1 < board.length) {
+                            if (board[row + 1][col] == '.') {
+                                return new int[] {row + 1, col};
+                            } else if (otherRow > 0 && board[otherRow - 1][col] == '.') {
+                                return new int[] {otherRow - 1, col};
+                            }
+                        } else if (row < otherRow && row > 0) {
+                            if (board[row - 1][col] == '.') {
+                                return new int[] {row - 1, col};
+                            } else if (otherRow + 1 < board.length && board[otherRow + 1][col] == '.') {
+                                return new int[] {otherRow + 1, col};
+                            }
+                        }
+                    } else {
+                        if (col > otherCol && col + 1 < board.length) {
+                            if (board[row][col + 1] == '.') {
+                                return new int[] {row, col + 1};
+                            } else if (otherCol > 0 && board[row][otherCol - 1] == '.') {
+                                return new int[] {row, otherCol - 1};
+                            }
+                        } else if (col < otherCol && col > 0) {
+                            if (board[row][col - 1] == '.') {
+                                return new int[] {row, col - 1};
+                            } else if (otherCol + 1 < board.length && board[row][otherCol + 1] == '.') {
+                                return new int[] {row, otherCol + 1};
+                            }
+                        }
+                    }
+                    //System.out.println("two adjacent but no enhanced shot?");
+                }
+            }
+
+            if (row == 0 && col == 0 && !Arrays.equals(wounds[0], new int[]{0, 0})) {
                 continue;
             }
 
-            if (((wound[0] > 0 && board[wound[0] - 1][wound[1]] != '.') || wound[0] == 0) &&
-                    ((wound[0] < board.length - 1 && board[wound[0] + 1][wound[1]] != '.') || wound[0] == board.length - 1) &&
-                    ((wound[1] > 0 && board[wound[0]][wound[1] - 1] != '.') || wound[1] == 0) &&
-                    (((wound[1] < board.length - 1 && board[wound[0]][wound[1] + 1] != '.')) || wound[1] == board.length - 1)) {
+            if (((row > 0 && board[row - 1][col] != '.') || row == 0) &&
+                    ((row < board.length - 1 && board[row + 1][col] != '.') || row == board.length - 1) &&
+                    ((col > 0 && board[row][col - 1] != '.') || col == 0) &&
+                    (((col < board.length - 1 && board[row][col + 1] != '.')) || col == board.length - 1)) {
                 continue;
             }
 
-            if (wound[0] > 0) {
-                for (int row = wound[0]; row >= 0; row--) {
-                    if (board[row][wound[1]] == '.' || up.isEmpty()) {
-                        up += board[row][wound[1]];
+            if (row > 0) {
+                for (int boardRow = row; boardRow >= 0; boardRow--) {
+                    if (board[boardRow][col] == '.' || up.isEmpty()) {
+                        up += board[boardRow][col];
                     } else {
                         break;
                     }
                 }
             }
 
-            if (wound[1] < board.length - 1) {
-                for (int col = wound[1]; col < board.length; col++) {
-                    if (board[wound[0]][col] == '.' || right.isEmpty()) {
-                        right += board[wound[0]][col];
+            if (col < board.length - 1) {
+                for (int boardCol = col; boardCol < board.length; boardCol++) {
+                    if (board[row][boardCol] == '.' || right.isEmpty()) {
+                        right += board[row][boardCol];
                     } else {
                         break;
                     }
                 }
             }
 
-            if (wound[1] > 0) {
-                for (int col = wound[1]; col >= 0; col--) {
-                    if (board[wound[0]][col] == '.' || left.isEmpty()) {
-                        left += board[wound[0]][col];
+            if (col > 0) {
+                for (int boardCol = col; boardCol >= 0; boardCol--) {
+                    if (board[row][boardCol] == '.' || left.isEmpty()) {
+                        left += board[row][boardCol];
                     } else {
                         break;
                     }
@@ -136,10 +182,10 @@ public class Admiral {
             }
 
 
-            if (wound[0] < board.length - 1) {
-                for (int row = wound[0]; row < board.length; row++) {
-                    if (board[row][wound[1]] == '.' || down.isEmpty()) {
-                        down += board[row][wound[1]];
+            if (row < board.length - 1) {
+                for (int boardRow = row; boardRow < board.length; boardRow++) {
+                    if (board[boardRow][col] == '.' || down.isEmpty()) {
+                        down += board[boardRow][col];
                     } else {
                         break;
                     }
@@ -148,42 +194,13 @@ public class Admiral {
 
 
             if (up.length() > right.length() && up.length() > left.length() && up.length() > down.length()) {
-                return new int[]{wound[0] - 1, wound[1]};
+                return new int[]{row - 1, col};
             } else if (right.length() > down.length() && right.length() > left.length()) {
-                return new int[]{wound[0], wound[1] + 1};
+                return new int[]{row, col + 1};
             } else if (down.length() > left.length()) {
-                return new int[]{wound[0] + 1, wound[1]};
+                return new int[]{row + 1, col};
             } else {
-                return new int[]{wound[0], wound[1] - 1};
-            }
-        }
-
-
-        //For each hit, shoot at any unknown squares around it.
-        for (int[] wound : wounds) {
-            //check above
-            if (wound[0] > 0 && board[wound[0] - 1][wound[1]] == '.') {
-                coords[0] = wound[0] - 1;
-                coords[1] = wound[1];
-                break;
-
-                //check right
-            } else if (wound[1] < board[0].length - 1 && board[wound[0]][wound[1] + 1] == '.') {
-                coords[0] = wound[0];
-                coords[1] = wound[1] + 1;
-                break;
-
-                //check down
-            } else if (wound[0] < board.length - 1 && board[wound[0] + 1][wound[1]] == '.') {
-                coords[0] = wound[0] + 1;
-                coords[1] = wound[1];
-                break;
-
-                //check left
-            } else if (wound[1] > 0 && board[wound[0]][wound[1] - 1] == '.') {
-                coords[0] = wound[0];
-                coords[1] = wound[1] - 1;
-                break;
+                return new int[]{row, col - 1};
             }
         }
 
