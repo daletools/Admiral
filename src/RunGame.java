@@ -2,7 +2,7 @@ import java.util.Arrays;
 public class RunGame{
     public static void main(String[] args){
         int sum = 0;
-        int games = 100000;
+        int games = 10000;
         int fastest = 100;
         int slowest = 0;
         int[] mode = new int[100];
@@ -16,7 +16,7 @@ public class RunGame{
                 slowest = gameTime;
             }
             mode[gameTime]++;
-            //System.out.println(i);
+            System.out.println(i);
         }
         double avg = (double)sum/games;
         System.out.println("Avg is " + avg);

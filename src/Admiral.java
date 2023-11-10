@@ -17,7 +17,9 @@ Description: Given a 10x10 board, plays battleship to the best of its ability.  
 */
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class Admiral {
     public static String fire(char[][] board) {
@@ -44,11 +46,16 @@ public class Admiral {
         fleet.put('5', 5);
 
         //Remove any sunk ships fromm the fleet
-        for (char[] row : board) {
-            for (char cell : row) {
+        int[][] wounds = new int[16][2];
+        int woundIndex = 0;
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                char cell = board[row][col];
                 if (cell == 'X') {
                     containsWoundedShip = true;
-                    break;
+                    wounds[woundIndex][0] = row;
+                    wounds[woundIndex][1] = col;
+                    woundIndex++;
                 } else if (Character.isDigit(cell)) {
                     fleet.remove(cell);
                 }
@@ -58,32 +65,19 @@ public class Admiral {
         int[] shot;
         //Choose the hunt/kill method based on whether there is a wounded ship
         if (containsWoundedShip) {
-            shot = kill(board);
+            shot = kill(board, wounds);
         } else {
-            shot = radar(board, fleet);
+            shot = hunt(board, fleet);
         }
 
         //Format the int coordinates into a string for return
         return formatGuess(shot[0], shot[1]);
     }
 
-
     //try and finish off a wounded ship
-    public static int[] kill(char[][] board) {
+    public static int[] kill(char[][] board, int[][] wounds) {
         int[] coords = {0, 0};
-        int[][] wounds = new int[15][2];
         int index = 0;
-
-        //Gather coordinates of any hits to fire around.
-        for (int row = 0; row < board.length; row++){
-            for (int col = 0; col < board[row].length; col++) {
-                if (board[row][col] == 'X') {
-                    wounds[index][0] = row;
-                    wounds[index][1] = col;
-                    index++;
-                }
-            }
-        }
 
         String up = "";
         String down = "";
@@ -99,6 +93,8 @@ public class Admiral {
             for (int[] otherWound : wounds) {
                 int otherRow = otherWound[0];
                 int otherCol = otherWound[1];
+
+                //TODO() finish this up, almost always works
 
                 //if wound and otherWound are the same, skip
                 if (row - otherRow == 0 && col - otherCol == 0) {
@@ -208,13 +204,14 @@ public class Admiral {
     }
 
 
-    public static int[] radar(char[][] board, HashMap<Character, Integer> ships) {
+    public static int[] hunt(char[][] board, HashMap<Character, Integer> ships) {
         int[][] probabilityBoard = new int[10][10];
-
 
         //This is a horror for big O notation.
         //For each ship, find all valid placements and increment the corresponding cells on the probability board.
-        for (int ship : ships.values()) {
+        for (int ship : ships.values().stream().sorted(Comparator.reverseOrder()).toList()) {
+            int shipLocations = 0;
+            int[] currentSpace = new int[2];
             for (int row = 0; row < board.length; row++) {
                 //Just join to string each row and filter out the bits we don't want
                 String fullRow = Arrays.toString(board[row]).replaceAll("[, \\[\\]]", "");
@@ -227,7 +224,11 @@ public class Admiral {
                         for (int i = 0; i < ship; i++) {
                             //increment each space the ship would cover
                             probabilityBoard[row][col + i]++;
+                            //probabilityBoard[row][col + i] *= ship;
                         }
+                        currentSpace[0] = row;
+                        currentSpace[1] = col;
+                        shipLocations++;
                     }
                 }
             }
@@ -244,11 +245,23 @@ public class Admiral {
                     if (space.matches("^\\.*$")) {
                         for (int i = 0; i < ship; i++) {
                             probabilityBoard[row + i][col]++;
+                            //probabilityBoard[row + i][col] *= ship;
                         }
+                        currentSpace[0] = row;
+                        currentSpace[1] = col;
+                        shipLocations++;
                     }
                 }
             }
+            if (shipLocations <= 3) {
+                return currentSpace;
+            }
         }
+
+        //What if we search for ships largest to smallest?
+        //Large ships naturally have less possible spaces, so if we get low enough on that we can increase our chances of hitting, right?
+
+
 
         int[] coords = {0, 0};
 
