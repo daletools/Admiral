@@ -52,7 +52,7 @@ public class RunGame{
             //copy array before passing to students
             char[][] s1Copy = Arrays.copyOf(s1Guesses, s1Guesses.length);
 
-            String guess1 = Admiral.fire(s1Copy);
+            String guess1 = Oracle.makeGuess(s1Copy);
             history[moves - 1] = guess1;
             boolean p1 = BattleShipTools.updateGuess(s1Guesses,guess1,gameBoard);
             //break if the player won
