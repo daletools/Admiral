@@ -8,21 +8,15 @@ Description: Given a 10x10 board, plays battleship to the best of its ability.  
     more visible wounded ships.  If there are no wounded ships, it builds an array summing the number of possible
     placements that would put a ship in each cell, then targets the highest number.
 
-    TODO()
-    - New hunting algorithm, can we look ahead at possibilities and determine the 'delta certainty' of each shot?
-    - Certainty meaning how sure we are any given space is either occupied or not.
-    - Is it always best to shoot at the highest valued cell, or is it sometimes more valuable to increase our
-    overall board certainty?
-
 */
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class Admiral {
-    public static String fire(char[][] board) {
+    public static String makeGuess(char[][] board) {
         /*
             ‘.’ – no guess yet
             ‘O’ – miss
@@ -46,16 +40,14 @@ public class Admiral {
         fleet.put('5', 5);
 
         //Remove any sunk ships fromm the fleet
-        int[][] wounds = new int[16][2];
-        int woundIndex = 0;
+        ArrayList<Integer[]> wounds = new ArrayList<>();
+
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
                 char cell = board[row][col];
                 if (cell == 'X') {
                     containsWoundedShip = true;
-                    wounds[woundIndex][0] = row;
-                    wounds[woundIndex][1] = col;
-                    woundIndex++;
+                    wounds.add(new Integer[]{row, col});
                 } else if (Character.isDigit(cell)) {
                     fleet.remove(cell);
                 }
@@ -75,9 +67,8 @@ public class Admiral {
     }
 
     //try and finish off a wounded ship
-    public static int[] kill(char[][] board, int[][] wounds) {
+    public static int[] kill(char[][] board, ArrayList<Integer[]> wounds) {
         int[] coords = {0, 0};
-        int index = 0;
 
         String up = "";
         String down = "";
@@ -85,60 +76,10 @@ public class Admiral {
         String right = "";
 
         //which cardinal directions goes the longest before terminating at a wall or other revealed square?
-        for (int[] wound : wounds) {
+        for (Integer[] wound : wounds) {
 
             int row = wound[0];
             int col = wound[1];
-
-            for (int[] otherWound : wounds) {
-                int otherRow = otherWound[0];
-                int otherCol = otherWound[1];
-
-                //TODO() finish this up, almost always works
-
-                //if wound and otherWound are the same, skip
-                if (row - otherRow == 0 && col - otherCol == 0) {
-                    continue;
-
-                //if they are within one of each other horizontally OR vertically
-                } else if (Math.abs(row - otherRow) == 1 ^ Math.abs(col - otherCol) == 1) {
-                    //On same row and adjacent
-                    if (Math.abs(row - otherRow) == 1) {
-                        if (row > otherRow && row + 1 < board.length) {
-                            if (board[row + 1][col] == '.') {
-                                return new int[] {row + 1, col};
-                            } else if (otherRow > 0 && board[otherRow - 1][col] == '.') {
-                                return new int[] {otherRow - 1, col};
-                            }
-                        } else if (row < otherRow && row > 0) {
-                            if (board[row - 1][col] == '.') {
-                                return new int[] {row - 1, col};
-                            } else if (otherRow + 1 < board.length && board[otherRow + 1][col] == '.') {
-                                return new int[] {otherRow + 1, col};
-                            }
-                        }
-                    } else {
-                        if (col > otherCol && col + 1 < board.length) {
-                            if (board[row][col + 1] == '.') {
-                                return new int[] {row, col + 1};
-                            } else if (otherCol > 0 && board[row][otherCol - 1] == '.') {
-                                return new int[] {row, otherCol - 1};
-                            }
-                        } else if (col < otherCol && col > 0) {
-                            if (board[row][col - 1] == '.') {
-                                return new int[] {row, col - 1};
-                            } else if (otherCol + 1 < board.length && board[row][otherCol + 1] == '.') {
-                                return new int[] {row, otherCol + 1};
-                            }
-                        }
-                    }
-                    //System.out.println("two adjacent but no enhanced shot?");
-                }
-            }
-
-            if (row == 0 && col == 0 && !Arrays.equals(wounds[0], new int[]{0, 0})) {
-                continue;
-            }
 
             if (((row > 0 && board[row - 1][col] != '.') || row == 0) &&
                     ((row < board.length - 1 && board[row + 1][col] != '.') || row == board.length - 1) &&
@@ -149,66 +90,72 @@ public class Admiral {
 
             if (row > 0) {
                 for (int boardRow = row; boardRow >= 0; boardRow--) {
-                    if (board[boardRow][col] == '.' || up.isEmpty()) {
+                    if (board[boardRow][col] == '.' || board[boardRow][col] == 'X' || up.isEmpty()) {
                         up += board[boardRow][col];
                     } else {
                         break;
                     }
                 }
+                //if there are no empty spaces in the string, zero it out
+                //this happens when two ships are parallel, bordered by hits, like "OXXO"
+                if (up.indexOf('.') == -1) up = "";
             }
 
             if (col < board.length - 1) {
                 for (int boardCol = col; boardCol < board.length; boardCol++) {
-                    if (board[row][boardCol] == '.' || right.isEmpty()) {
+                    if (board[row][boardCol] == '.' || board[row][boardCol] == 'X' || right.isEmpty()) {
                         right += board[row][boardCol];
                     } else {
                         break;
                     }
                 }
+                if (right.indexOf('.') == -1) right = "";
             }
 
             if (col > 0) {
                 for (int boardCol = col; boardCol >= 0; boardCol--) {
-                    if (board[row][boardCol] == '.' || left.isEmpty()) {
+                    if (board[row][boardCol] == '.' || board[row][boardCol] == 'X' || left.isEmpty()) {
                         left += board[row][boardCol];
                     } else {
                         break;
                     }
                 }
+                if (left.indexOf('.') == -1) left = "";
             }
-
 
             if (row < board.length - 1) {
                 for (int boardRow = row; boardRow < board.length; boardRow++) {
-                    if (board[boardRow][col] == '.' || down.isEmpty()) {
+                    if (board[boardRow][col] == '.' || board[boardRow][col] == 'X' || down.isEmpty()) {
                         down += board[boardRow][col];
                     } else {
                         break;
                     }
                 }
+                if (down.indexOf('.') == -1) down = "";
             }
 
-
+            //Choose the longest string and return the first empty space
             if (up.length() > right.length() && up.length() > left.length() && up.length() > down.length()) {
-                return new int[]{row - 1, col};
+                return new int[]{row - up.indexOf('.'), col};
             } else if (right.length() > down.length() && right.length() > left.length()) {
-                return new int[]{row, col + 1};
+                return new int[]{row, col + right.indexOf('.')};
             } else if (down.length() > left.length()) {
-                return new int[]{row + 1, col};
+                return new int[]{row + down.indexOf('.'), col};
             } else {
-                return new int[]{row, col - 1};
+                return new int[]{row, col - left.indexOf('.')};
             }
         }
 
+        //This should be unreachable, but is required to compile.
         return coords;
     }
-
 
     public static int[] hunt(char[][] board, HashMap<Character, Integer> ships) {
         int[][] probabilityBoard = new int[10][10];
 
         //This is a horror for big O notation.
         //For each ship, find all valid placements and increment the corresponding cells on the probability board.
+        //We start with the largest ship and go down, experimenting with minimum thresholds to bother building the whole map.
         for (int ship : ships.values().stream().sorted(Comparator.reverseOrder()).toList()) {
             int shipLocations = 0;
             int[] currentSpace = new int[2];
@@ -253,15 +200,11 @@ public class Admiral {
                     }
                 }
             }
+            //If the current ship only has a few locations it can possibly be, guess one of those to eliminate it
             if (shipLocations <= 3) {
                 return currentSpace;
             }
         }
-
-        //What if we search for ships largest to smallest?
-        //Large ships naturally have less possible spaces, so if we get low enough on that we can increase our chances of hitting, right?
-
-
 
         int[] coords = {0, 0};
 
@@ -279,7 +222,6 @@ public class Admiral {
 
         return coords;
     }
-
 
     //change indices into proper guess format
     public static String formatGuess(int row, int col) {

@@ -5,7 +5,7 @@ public class RunGame{
         int games = 10000;
         int fastest = 100;
         int slowest = 0;
-        int[] mode = new int[100];
+        int[] mode = new int[102];
 
         for(int i = 0; i < games; i++){
             int gameTime = play();
@@ -16,10 +16,10 @@ public class RunGame{
                 slowest = gameTime;
             }
             mode[gameTime]++;
-            System.out.println(i);
+            System.out.print("\r" + i);
         }
         double avg = (double)sum/games;
-        System.out.println("Avg is " + avg);
+        System.out.println("\nAvg is " + avg);
         System.out.println("Fastest is " + fastest);
         System.out.println("Slowest is " + slowest);
         for (int i = 0; i < mode.length; i++) {
@@ -52,16 +52,24 @@ public class RunGame{
             //copy array before passing to students
             char[][] s1Copy = Arrays.copyOf(s1Guesses, s1Guesses.length);
 
-            String guess1 = Oracle.makeGuess(s1Copy);
+            String guess1 = Admiral.makeGuess(s1Copy);
             history[moves - 1] = guess1;
+
             boolean p1 = BattleShipTools.updateGuess(s1Guesses,guess1,gameBoard);
             //break if the player won
             if(p1){
                 break;
             }
+
+            if (moves > 75) {
+                System.out.println("uh oh");
+                BattleShipTools.printBoard(s1Copy);
+            }
             // System.out.println("----------------------------------------------------");
             // BattleShipTools.printBoard(s1Guesses);
         }
+
+
 
         if(moves == DIMENSIONS * DIMENSIONS + 1){
             System.out.println("Out of Moves");

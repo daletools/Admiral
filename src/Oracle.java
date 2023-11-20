@@ -4,6 +4,21 @@ import java.util.HashMap;
 
 public class Oracle {
 
+    public static void main(String[] args) {
+        int[][] testBoard = new int[10][10];
+        BattleShipTools.randomBoard(testBoard);
+
+        char[][] s1Guesses = new char[10][10];
+
+        for(int row = 0; row < 10; row++){
+            for(int col = 0; col < 10; col++){
+                s1Guesses[row][col] = '.';
+            }
+        }
+
+
+    }
+
     public static String makeGuess(char[][] board) {
         //Hold coordinates to parse
         int[] coordinates = {0, 0};
